@@ -68,6 +68,46 @@ func countIncreases(input string) (increases int64, err error) {
 	return increases, nil
 }
 
+func deleteEmptyItems(src []string) []string {
+	var result []string
+	for _, str := range src {
+		if str != "" {
+			result = append(result, str)
+		}
+	}
+	return result
+}
+
+func slidingWindowIncreases(input string) (increases int64, err error) {
+	var prevWindowSum, currWindowSum int64
+	lines := deleteEmptyItems(strings.Split(input, "\n"))
+
+	if len(lines) < 4 {
+		return -1, fmt.Errorf("cannot create at least 2 sliding windows")
+	}
+
+	for i := 3; i < len(lines); i++ {
+		for j := 0; j < 3; j++ {
+			a, err := strconv.ParseInt(lines[i-j], 10, 64)
+			if err != nil {
+				return -1, err
+			}
+			b, err := strconv.ParseInt(lines[i-j-1], 10, 64)
+			if err != nil {
+				return -1, err
+			}
+			currWindowSum += a
+			prevWindowSum += b
+		}
+		if currWindowSum > prevWindowSum {
+			increases++
+		}
+		currWindowSum = 0
+		prevWindowSum = 0
+	}
+	return increases, nil
+}
+
 func main() {
 	var err error
 	input, err := getInput(inputUrl)
@@ -75,7 +115,11 @@ func main() {
 		log.Fatalln(err)
 	}
 
+	// count increases per each measurement
 	increases, err := countIncreases(string(input))
+	fmt.Println("Regular increases: ", increases)
 
-	fmt.Println("Increases: ", increases)
+	// count increases in the sliding windows of size 3
+	slidingWinIncreases, err := slidingWindowIncreases(string(input))
+	fmt.Println("Sliding windows (3 measurements) increases: ", slidingWinIncreases)
 }
