@@ -2,46 +2,11 @@ package main
 
 import (
 	"fmt"
-	"io"
+	"github.com/kamilsamaj/advent-of-code-2021/internal"
 	"log"
-	"net/http"
-	"os"
 	"strconv"
 	"strings"
-	"time"
 )
-
-const cookieSessionFile = "../.cookie-session.txt"
-const inputUrl = "https://adventofcode.com/2021/day/1/input"
-
-func getSessionCookie(filename string) (string, error) {
-	content, err := os.ReadFile(filename)
-	if err != nil {
-		return "", err
-	}
-	return strings.TrimSuffix(string(content), "\n"), nil
-}
-
-func getInput(url string) ([]byte, error) {
-	session, err := getSessionCookie(cookieSessionFile)
-	if err != nil {
-		return []byte{}, err
-	}
-	client := &http.Client{
-		Timeout: time.Second * 10,
-	}
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return []byte{}, err
-	}
-
-	req.Header.Set("Cookie", session)
-	resp, err := client.Do(req)
-	if err != nil {
-		return []byte{}, err
-	}
-	return io.ReadAll(resp.Body)
-}
 
 func countIncreases(input string) (increases int64, err error) {
 	var prevNumber, currNumber int64
@@ -109,17 +74,23 @@ func slidingWindowIncreases(input string) (increases int64, err error) {
 }
 
 func main() {
-	var err error
-	input, err := getInput(inputUrl)
+	inputUrl := "https://adventofcode.com/2021/day/1/input"
+	input, err := internal.GetInput(inputUrl)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
 	// count increases per each measurement
 	increases, err := countIncreases(string(input))
+	if err != nil {
+		log.Fatalln(err)
+	}
 	fmt.Println("Regular increases: ", increases)
 
-	// count increases in the sliding windows of size 3
+	// count increases in the sliding window of size 3
 	slidingWinIncreases, err := slidingWindowIncreases(string(input))
-	fmt.Println("Sliding windows (3 measurements) increases: ", slidingWinIncreases)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	fmt.Println("Sliding window (3 measurements) increases: ", slidingWinIncreases)
 }
