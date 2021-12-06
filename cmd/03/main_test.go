@@ -1,6 +1,9 @@
 package main
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestCalcMostCommonBits(t *testing.T) {
 	cases := []struct {
@@ -20,7 +23,7 @@ func TestCalcMostCommonBits(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		resArr, err := calcMostCommonBits(&c.input)
+		resArr, err := calcMostCommonBits(strings.Split(c.input, "\n"))
 		if err != nil {
 			t.Errorf("%s", err)
 		}

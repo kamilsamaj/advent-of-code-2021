@@ -10,10 +10,10 @@ import (
 
 const bitSize = 12
 
-func calcMostCommonBits(input *string) (resArr [bitSize]uint8, err error) {
+func calcMostCommonBits(lines []string) (resArr [bitSize]uint8, err error) {
 	var resArrSums [bitSize]int
 	var i int
-	for _, line := range strings.Split(*input, "\n") {
+	for _, line := range lines {
 		for j, c := range line {
 			resArrSums[j] += int(c) - 48 // '0' = 48, '1' = 49
 		}
@@ -51,6 +51,44 @@ func convertIntBitsToInt64(bits [bitSize]uint8) float64 {
 	return res
 }
 
+func calcFactor(lines []string, invert bool) ([bitSize]uint8, error) {
+	oxgnLines := make([]string, len(lines)) // these lines will be reduced based on the most common bits
+	copy(oxgnLines, lines)
+	for i := 0; i < bitSize; i++ {
+		commBits, err := calcMostCommonBits(oxgnLines)
+		if invert {
+			commBits = invertBits(commBits)
+		}
+		if err != nil {
+			log.Fatalln(err)
+		}
+		// purge entries that don't match the bit
+		var filteredLines []string
+		for _, l := range oxgnLines {
+			if l == "" {
+				continue
+			}
+			if (l[i] - 48) == commBits[i] {
+				// copy the line to the new array
+				filteredLines = append(filteredLines, l)
+			}
+		}
+		oxgnLines = filteredLines // swap the filtered array for the original
+		if len(oxgnLines) <= 1 {
+			break
+		}
+	}
+	var res [bitSize]uint8
+	if len(oxgnLines) == 1 {
+		for i := 0; i < bitSize; i++ {
+			res[i] = oxgnLines[0][i] - 48
+		}
+		return res, nil
+	} else {
+		return res, fmt.Errorf("unexpected result from calcOxygenFactor: %v", oxgnLines)
+	}
+}
+
 func main() {
 	inputUrl := "https://adventofcode.com/2021/day/3/input"
 	input, err := internal.GetInput(inputUrl)
@@ -59,12 +97,27 @@ func main() {
 	}
 
 	// Task 1 - calculate the most and the least common bits
-	inputStr := string(input)
-	bits, err := calcMostCommonBits(&inputStr)
+	lines := strings.Split(string(input), "\n")
+	bits, err := calcMostCommonBits(lines)
 	if err != nil {
 		log.Fatalln(err)
 	}
 	gamma := convertIntBitsToInt64(bits)
 	epsilon := convertIntBitsToInt64(invertBits(bits))
-	fmt.Printf("Task 1: %d", int64(gamma*epsilon))
+	fmt.Printf("Task 1: %d\n", int64(gamma*epsilon))
+
+	// Task 2 - find the oxygen generator and CO2 scrubbing factors
+	oxgnLine, err := calcFactor(lines, false)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	co2Line, err := calcFactor(lines, true)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	fmt.Printf("Task 2: Oxygen line: %v, CO2 scrubbing line: %v, result: %d",
+		oxgnLine,
+		co2Line,
+		int64(convertIntBitsToInt64(oxgnLine)*convertIntBitsToInt64(co2Line)))
 }
