@@ -14,7 +14,7 @@ const boardSize = 1000
 
 type Board [boardSize][boardSize]Point
 
-func (b *Board) drawLine(line Line) bool {
+func (b *Board) drawLine(line Line, withVertLines bool) bool {
 	if line.start.x == line.end.x {
 		// vertical line
 		startIndex := int(math.Min(float64(line.start.y), float64(line.end.y))) // start from the smaller index
@@ -30,7 +30,23 @@ func (b *Board) drawLine(line Line) bool {
 		for i := 0; i < noSteps; i++ {
 			b[startIndex+i][line.start.y].val++
 		}
-	} else {
+	} else if withVertLines && math.Abs(float64(line.start.x)-float64(line.end.x)) == math.Abs(float64(line.start.y)-float64(line.end.y)) {
+		// diagonal lines
+		xStep := 1
+		yStep := 1
+		if line.start.x > line.end.x {
+			xStep = -1
+		}
+		if line.start.y > line.end.y {
+			yStep = -1
+		}
+
+		noSteps := int(math.Abs(float64(line.end.x-line.start.x))) + 1
+		for i := 0; i < noSteps; i++ {
+			xPos := line.start.x + i*xStep
+			yPos := line.start.y + i*yStep
+			b[xPos][yPos].val++
+		}
 		return false
 	}
 	return true
@@ -74,9 +90,11 @@ func main() {
 
 	// process the input
 	inputLines := strings.Split(string(input), "\n")
-	//var lines []Line
-	b := Board{}
-	r := regexp.MustCompile(`(?P<x1>\d{1,4}),(?P<y1>\d{1,4}) -> (?P<x2>\d{1,4}),(?P<y2>\d{1,4})`) // precompile the regexp
+
+	// Task 1: Only horizontal and vertical lines
+	b1 := Board{} // horizontal + vertical
+	b2 := Board{} // horizontal + vertical + diagonal
+	r := regexp.MustCompile(`(?P<x1>\d{1,4}),(?P<y1>\d{1,4}) -> (?P<x2>\d{1,4}),(?P<y2>\d{1,4})`)
 	for _, inpLine := range inputLines {
 		if inpLine == "" {
 			continue
@@ -85,9 +103,10 @@ func main() {
 		line := NewLine(fields[1], fields[2], fields[3], fields[4])
 
 		// check for vertical or horizontal lines happens in the b.drawLine()
-
-		b.drawLine(line)
-		//lines = append(lines, line)
+		b1.drawLine(line, false)
+		b2.drawLine(line, true)
 	}
-	fmt.Println("Task 1: OverLap score:", b.countPoints(2))
+	fmt.Println("Task 1: OverLap score H+V lines:", b1.countPoints(2))
+	fmt.Println("Task 2: OverLap score H+V+D lines:", b2.countPoints(2))
+
 }
