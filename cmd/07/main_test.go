@@ -1,6 +1,9 @@
 package main
 
-import "testing"
+import (
+	"sort"
+	"testing"
+)
 
 func TestCheapestPos(t *testing.T) {
 	cases := []struct {
@@ -21,7 +24,28 @@ func TestCheapestPos(t *testing.T) {
 		},
 	}
 	for _, c := range cases {
+		sort.Ints(c.pos)
 		pos, noMoves := cheapestPos(c.pos)
+
+		if pos != c.expected[0] || noMoves != c.expected[1] {
+			t.Errorf("got: [%d %d], expected: %v", pos, noMoves, c.expected)
+		}
+	}
+}
+
+func TestCheapestArithmPos(t *testing.T) {
+	cases := []struct {
+		pos      []int
+		expected [2]int // best position, no. moves
+	}{
+		{
+			[]int{16, 1, 2, 0, 4, 2, 7, 1, 2, 14},
+			[2]int{5, 168},
+		},
+	}
+	for _, c := range cases {
+		sort.Ints(c.pos)
+		pos, noMoves := cheapestArithmPos(c.pos)
 
 		if pos != c.expected[0] || noMoves != c.expected[1] {
 			t.Errorf("got: [%d %d], expected: %v", pos, noMoves, c.expected)

@@ -22,21 +22,41 @@ func calcMoves(pos []int, val int) int {
 	return total
 }
 
+func avg(pos []int) float64 {
+	total := 0
+	for _, p := range pos {
+		total += p
+	}
+	return float64(len(pos)) / float64(total)
+}
+
+func calcMovesArithmProgression(pos []int, val int) int {
+	total := 0
+	inc := 0
+	for _, p := range pos {
+		absAnA1 := int(math.Abs(float64(val - p)))
+		inc = absAnA1 * (1 + absAnA1) / 2
+		total += inc
+	}
+	return total
+}
+
 // cheapestPos calculates the best position for crabs and the total number of moves (fuel) they need to do
 // pos []int = sorted positions of crabs
-func cheapestPos(positions []int) (bestPos, minNoMoves int) {
+func cheapestPos(positions []int) (bestPos, minFuel int) {
 	med := (len(positions) / 2) - 1 // index of the median item
 	increases := 0
 	bestPos = -1
-	minNoMoves = MaxInt
+	minFuel = MaxInt
 
 	// go left and right to see if we didn't find just the local min or max
 	// go right
 	for i := med; i < len(positions); i++ {
-		noMoves := calcMoves(positions, positions[i])
-		if noMoves < minNoMoves {
-			minNoMoves = noMoves
+		fuel := calcMoves(positions, positions[i])
+		if fuel < minFuel {
+			minFuel = fuel
 			bestPos = positions[i]
+			increases = 0
 		} else {
 			increases++
 		}
@@ -49,8 +69,8 @@ func cheapestPos(positions []int) (bestPos, minNoMoves int) {
 	increases = 0
 	for i := med - 1; i >= 0; i-- {
 		p := calcMoves(positions, i)
-		if p < minNoMoves {
-			minNoMoves = p
+		if p < minFuel {
+			minFuel = p
 			bestPos = i
 		} else {
 			increases++
@@ -59,7 +79,49 @@ func cheapestPos(positions []int) (bestPos, minNoMoves int) {
 			break
 		}
 	}
-	return bestPos, minNoMoves
+	return bestPos, minFuel
+}
+
+// cheapestArithmPos calculates the best position for crabs and the total number of moves (fuel) they need to do
+// pos []int = sorted positions of crabs
+// the fuel price increases with every step = arithmetic progression
+func cheapestArithmPos(positions []int) (bestPos, minFuel int) {
+	average := avg(positions) // index of the median item
+	increases := 0
+	bestPos = -1
+	minFuel = MaxInt
+
+	// go left and right to see if we didn't find just the local min or max
+	// go right
+	for i := int(average); i < positions[len(positions)-1]; i++ {
+		fuel := calcMovesArithmProgression(positions, i)
+		if fuel < minFuel {
+			minFuel = fuel
+			bestPos = i
+			increases = 0
+		} else {
+			increases++
+		}
+		if increases > 20 {
+			break
+		}
+	}
+
+	// go left
+	increases = 0
+	for i := int(average) - 1; i >= 0; i-- {
+		fuel := calcMovesArithmProgression(positions, i)
+		if fuel < minFuel {
+			minFuel = fuel
+			bestPos = i
+		} else {
+			increases++
+		}
+		if increases > 20 {
+			break
+		}
+	}
+	return bestPos, minFuel
 }
 
 func main() {
@@ -70,15 +132,21 @@ func main() {
 	}
 
 	// process the input and load crabs' positions
+	// be careful about the linebreak in the last number
 	origPosStr := strings.Split(strings.Trim(string(input), "\n"), ",")
 	var origPos []int
 	for _, s := range origPosStr {
 		n, _ := strconv.Atoi(s)
-		fmt.Println(n)
 		origPos = append(origPos, n)
 	}
 	// the ideal position should be somewhere around the median
 	sort.Ints(origPos) // sort positions in place
-	bestPos, noMoves := cheapestPos(origPos)
-	fmt.Printf("Best position: %d, no. moves: %d", bestPos, noMoves)
+
+	// Task 1
+	bestPos, fuel := cheapestPos(origPos)
+	fmt.Printf("Task 1: Best position: %d, fuel: %d\n", bestPos, fuel)
+
+	// Task 2
+	bestPos2, fuel2 := cheapestArithmPos(origPos)
+	fmt.Printf("Task 2: Best position: %d, fuel: %d\n", bestPos2, fuel2)
 }
