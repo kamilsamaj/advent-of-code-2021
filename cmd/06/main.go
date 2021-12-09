@@ -75,7 +75,6 @@ func main() {
 				newfish = append(newfish, *newFish)
 			}
 		}
-		fmt.Printf("Counted %d days\n", i)
 		fish1 = append(fish1, newfish...)
 	}
 	fmt.Println("Task 1: No. fish after 80 days:", len(fish1))
