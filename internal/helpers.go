@@ -4,6 +4,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"sort"
 	"strings"
 	"time"
 )
@@ -37,4 +38,10 @@ func GetInput(url string) ([]byte, error) {
 		return []byte{}, err
 	}
 	return io.ReadAll(resp.Body)
+}
+
+func SortString(w string) string {
+	s := strings.Split(w, "")
+	sort.Strings(s)
+	return strings.Join(s, "")
 }
