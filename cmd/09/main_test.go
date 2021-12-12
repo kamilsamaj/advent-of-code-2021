@@ -18,3 +18,10 @@ func TestTask1(t *testing.T) {
 		t.Errorf("expected: 15, got: %d", res)
 	}
 }
+
+func TestTask2(t *testing.T) {
+	lines := strings.Split(strings.Trim(string(input), "\n"), "\n")
+	if res := task2(lines); res != 1134 {
+		t.Errorf("expected: 1134, got: %d", res)
+	}
+}
