@@ -96,7 +96,18 @@ func task1(lines []string, steps int) int {
 }
 
 func task2(lines []string) int {
-	return 0
+	g := grid{}
+	g.loadFromLines(lines)
+	i := 0
+	for {
+		i++
+		totalFlashes := g.addRound()
+		if totalFlashes == arrSize*arrSize {
+			return i
+		} else if i%10 == 0 {
+			fmt.Println("checked rounds:", i)
+		}
+	}
 }
 
 func main() {
@@ -108,6 +119,6 @@ func main() {
 
 	// be careful about the linebreak in the last number
 	lines := strings.Split(strings.Trim(string(input), "\n"), "\n")
-	fmt.Println("Task 1: Sum of error scores:", task1(lines, 100))
-	fmt.Println("Task 2: Median error score of the missing closings:", task2(lines))
+	fmt.Println("Task 1: Total no. flashes after 100 rounds:", task1(lines, 100))
+	fmt.Printf("Task 2: Everything flashing after: %d rounds\n", task2(lines))
 }

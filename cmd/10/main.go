@@ -120,9 +120,7 @@ func task2(lines []string) int {
 		}
 
 		// now finish the line
-		var missingSymbols []rune
 		for x := len(readSymbols) - 1; x >= 0; x-- {
-			missingSymbols = append(missingSymbols, mRev[readSymbols[x]])
 			symScore := scores[mRev[readSymbols[x]]]
 			errorScore = errorScore*5 + symScore
 		}

@@ -49,34 +49,22 @@ func (g *grid) getItem(p point) item {
 
 // compRight returns true if the value at point p is smaller than the value right to it
 func (g *grid) compRight(p point) bool {
-	if g.getItem(p).val < g.getItem(point{p.x + 1, p.y}).val {
-		return true
-	}
-	return false
+	return g.getItem(p).val < g.getItem(point{p.x + 1, p.y}).val
 }
 
 // compLeft compares a value of a point with a point on the left
 func (g *grid) compLeft(p point) bool {
-	if g.getItem(p).val < g.getItem(point{p.x - 1, p.y}).val {
-		return true
-	}
-	return false
+	return g.getItem(p).val < g.getItem(point{p.x - 1, p.y}).val
 }
 
 // compUp compares a value of a point with a point up
 func (g *grid) compUp(p point) bool {
-	if g.getItem(p).val < g.getItem(point{p.x, p.y - 1}).val {
-		return true
-	}
-	return false
+	return g.getItem(p).val < g.getItem(point{p.x, p.y - 1}).val
 }
 
 // compDown  compares a value of a point with a point below
 func (g *grid) compDown(p point) bool {
-	if g.getItem(p).val < g.getItem(point{p.x, p.y + 1}).val {
-		return true
-	}
-	return false
+	return g.getItem(p).val < g.getItem(point{p.x, p.y + 1}).val
 }
 
 // findMins finds all points on a grid that are local minimums (smallest between its neighbors)
@@ -86,7 +74,7 @@ func (g *grid) findMins() []point {
 	for y, items := range *g {
 
 		lineLen := len(items) // number of ints per items
-		for x, _ := range (*g)[y] {
+		for x := range (*g)[y] {
 			p := point{x, y}
 			isMin := true
 			if x < (lineLen - 1) {
@@ -149,8 +137,8 @@ func (g *grid) markNeighbors(p point, id int) {
 func (g *grid) findBasins() {
 	nextBasinId := 1
 	// try to iterate through all items in the grid => you can't skip anything
-	for y, _ := range *g {
-		for x, _ := range (*g)[y] {
+	for y := range *g {
+		for x := range (*g)[y] {
 			it := g.getItem(point{x, y})
 			if it.val == 9 || it.basinId != 0 {
 				continue
@@ -164,8 +152,8 @@ func (g *grid) findBasins() {
 // getBasinSizes returns a map of a basin ID and its size. Basin ID 0 is skipped (number nine fields)
 func (g *grid) getBasinSizes() (totals map[int]int) {
 	totals = make(map[int]int)
-	for y, _ := range *g {
-		for x, _ := range (*g)[y] {
+	for y := range *g {
+		for x := range (*g)[y] {
 			it := g.getItem(point{x, y})
 			if it.basinId == 0 {
 				continue

@@ -141,7 +141,7 @@ func (e *entry) findAllNums() {
 		}
 		s := internal.SortString(sig)
 		// num 3 fully includes no. 1
-		if isect3 := intersectSignals(s, e.numToSignalMap[1]); isect3 != nil && len(isect3) == 2 {
+		if len(intersectSignals(s, e.numToSignalMap[1])) == 2 {
 			e.numToSignalMap[3] = s
 			continue
 		}
@@ -166,7 +166,7 @@ func (e *entry) findAllNums() {
 		// we already have num 6, continue
 		if s == e.numToSignalMap[6] {
 			continue
-		} else if isect9 := intersectSignals(s, e.numToSignalMap[3]); isect9 != nil && len(isect9) == 5 {
+		} else if len(intersectSignals(s, e.numToSignalMap[3])) == 5 {
 			e.numToSignalMap[9] = s
 		} else {
 			e.numToSignalMap[0] = s
