@@ -19,11 +19,12 @@ type fold struct {
 }
 
 type grid struct {
-	points []point
+	points map[point]bool
 	folds  []fold
 }
 
 func (g *grid) load(lines []string) {
+	g.points = make(map[point]bool)
 	for _, line := range lines {
 		if line == "" {
 			continue
@@ -37,7 +38,7 @@ func (g *grid) load(lines []string) {
 			coord := strings.Split(strings.Trim(line, "\n"), ",")
 			x, _ := strconv.Atoi(coord[0])
 			y, _ := strconv.Atoi(coord[1])
-			g.points = append(g.points, point{x, y})
+			g.points[point{x, y}] = true
 		}
 	}
 }
@@ -45,7 +46,7 @@ func (g *grid) load(lines []string) {
 func (g *grid) fold(axis string, index int) map[point]bool {
 	var newPoints map[point]bool = make(map[point]bool)
 
-	for _, p := range g.points {
+	for p := range g.points {
 		if axis == "x" {
 			if p.x >= index {
 				newPoints[point{p.x - 2*(p.x-index), p.y}] = true
@@ -73,7 +74,13 @@ func task1(lines []string) int {
 }
 
 func task2(lines []string) int {
-	return 0
+	g := grid{}
+	g.load(lines)
+	for i := 0; i < len(g.folds); i++ {
+		smallerGrid := g.fold(g.folds[i].axisName, g.folds[i].foldIndex)
+		g.points = smallerGrid
+	}
+	return len(g.points)
 }
 
 func main() {
