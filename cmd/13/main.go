@@ -21,6 +21,16 @@ type fold struct {
 type grid struct {
 	points map[point]bool
 	folds  []fold
+	size   point
+}
+
+func (g *grid) updateSize(x, y int) {
+	if x != g.size.x {
+		g.size.x = x
+	}
+	if y != g.size.y {
+		g.size.y = y
+	}
 }
 
 func (g *grid) load(lines []string) {
@@ -38,13 +48,40 @@ func (g *grid) load(lines []string) {
 			coord := strings.Split(strings.Trim(line, "\n"), ",")
 			x, _ := strconv.Atoi(coord[0])
 			y, _ := strconv.Atoi(coord[1])
+			g.updateSize(x, y)
 			g.points[point{x, y}] = true
 		}
 	}
 }
 
+func (g *grid) printGrid() {
+	var arr = make([][]bool, g.size.y)
+	for i := 0; i < g.size.y; i++ {
+		arr[i] = make([]bool, g.size.x)
+	}
+	for k := range g.points {
+		arr[k.y][k.x] = true
+	}
+
+	for _, line := range arr {
+		for _, c := range line {
+			if c {
+				fmt.Print("#")
+			} else {
+				fmt.Print(" ")
+			}
+		}
+		fmt.Println("")
+	}
+}
+
 func (g *grid) fold(axis string, index int) map[point]bool {
-	var newPoints map[point]bool = make(map[point]bool)
+	var newPoints = make(map[point]bool)
+	if axis == "x" {
+		g.updateSize(index, g.size.y)
+	} else if axis == "y" {
+		g.updateSize(g.size.x, index)
+	}
 
 	for p := range g.points {
 		if axis == "x" {
@@ -76,10 +113,11 @@ func task1(lines []string) int {
 func task2(lines []string) int {
 	g := grid{}
 	g.load(lines)
-	for i := 0; i < len(g.folds); i++ {
-		smallerGrid := g.fold(g.folds[i].axisName, g.folds[i].foldIndex)
+	for _, f := range g.folds {
+		smallerGrid := g.fold(f.axisName, f.foldIndex)
 		g.points = smallerGrid
 	}
+	g.printGrid()
 	return len(g.points)
 }
 
@@ -93,5 +131,6 @@ func main() {
 	// be careful about the linebreak in the last number
 	lines := strings.Split(strings.Trim(string(input), "\n"), "\n")
 	fmt.Println("Task 1:", task1(lines))
-	fmt.Println("Task 2:", task2(lines))
+	fmt.Println("Task 2: Code to escape")
+	task2(lines)
 }
