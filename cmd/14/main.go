@@ -13,6 +13,8 @@ type polymer struct {
 	val      string
 }
 
+const MaxInt = int((^uint(0)) >> 1)
+
 func (p *polymer) load(lines []string) {
 	p.mappings = make(map[string]string)
 	for i, line := range lines {
@@ -29,6 +31,31 @@ func (p *polymer) load(lines []string) {
 		match := r.FindStringSubmatch(line)
 		p.mappings[match[1]] = match[2]
 	}
+}
+
+func (p *polymer) getTask1Result() int {
+	var resMap = make(map[string]int)
+	for _, s := range p.val {
+		resMap[string(s)]++
+	}
+	type res struct {
+		val    int
+		letter string
+	}
+	min := res{MaxInt, ""}
+	max := res{0, ""}
+
+	for k, v := range resMap {
+		if v > max.val {
+			max.val = v
+			max.letter = k
+		}
+		if v < min.val {
+			min.val = v
+			min.letter = k
+		}
+	}
+	return max.val - min.val
 }
 
 func task1(lines []string, noSteps int) int {
@@ -55,7 +82,9 @@ func task1(lines []string, noSteps int) int {
 		newPolymer.WriteString(string(p.val[len(p.val)-1]))
 		p.val = newPolymer.String()
 	}
-	return 0
+
+	// calculate result
+	return p.getTask1Result()
 }
 
 func task2(lines []string) int {

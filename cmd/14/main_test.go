@@ -27,7 +27,7 @@ CN -> C
 
 func TestTask1(t *testing.T) {
 	lines := strings.Split(strings.Trim(string(input), "\n"), "\n")
-	if res := task1(lines, 4); res != 17 {
-		t.Errorf("expected: 17 finalized paths, got: %d", res)
+	if res := task1(lines, 10); res != 1588 {
+		t.Errorf("expected: 1588 finalized paths, got: %d", res)
 	}
 }
