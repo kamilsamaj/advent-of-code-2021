@@ -27,7 +27,14 @@ CN -> C
 
 func TestTask1(t *testing.T) {
 	lines := strings.Split(strings.Trim(string(input), "\n"), "\n")
-	if res := task1(lines, 10); res != 1588 {
+	if res := expandPolymer(lines, 10); res != 1588 {
 		t.Errorf("expected: 1588 finalized paths, got: %d", res)
+	}
+}
+
+func TestTask2(t *testing.T) {
+	lines := strings.Split(strings.Trim(string(input), "\n"), "\n")
+	if res := expandPolymer(lines, 40); res != 2188189693529 {
+		t.Errorf("expected: 2188189693529 finalized paths, got: %d", res)
 	}
 }

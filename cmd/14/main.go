@@ -9,14 +9,14 @@ import (
 )
 
 type polymer struct {
-	mappings map[string]string
-	val      string
+	cache map[string]string
+	val   string
 }
 
 const MaxInt = int((^uint(0)) >> 1)
 
-func (p *polymer) load(lines []string) {
-	p.mappings = make(map[string]string)
+func (p *polymer) loadCache(lines []string, noSteps int) {
+	p.cache = make(map[string]string)
 	for i, line := range lines {
 		trimmedLine := strings.Trim(line, "\n")
 		if trimmedLine == "" {
@@ -29,11 +29,11 @@ func (p *polymer) load(lines []string) {
 
 		r := regexp.MustCompile(`^(\w{2}) -> (\w)$`)
 		match := r.FindStringSubmatch(line)
-		p.mappings[match[1]] = match[2]
+		p.cache[match[1]] = string(match[1][0]) + match[2] + string(match[1][1])
 	}
 }
 
-func (p *polymer) getTask1Result() int {
+func (p *polymer) getTaskResult() int {
 	var resMap = make(map[string]int)
 	for _, s := range p.val {
 		resMap[string(s)]++
@@ -58,37 +58,50 @@ func (p *polymer) getTask1Result() int {
 	return max.val - min.val
 }
 
-func task1(lines []string, noSteps int) int {
-	/*
-		Outline of the algorithm
-		- allocate []string big enough, grow when needed
-		- iterate with +1 step
-		- have a function that just tries to insert
-			- either it returns the same string or extended
-		- always insert with last first item skipped
-	*/
-	var p polymer
-	p.load(lines)
-	for i := 0; i < noSteps; i++ {
-		var newPolymer strings.Builder
-		for pos := 0; pos < (len(p.val) - 1); pos++ {
-			tuple := p.val[pos : pos+2]
-			if v, ok := p.mappings[tuple]; ok {
-				// insert the expanded polymer - skip the last one
-				newPolymer.WriteString(fmt.Sprint(string(p.val[pos]), v))
-			}
+func (p *polymer) expand(polStr string) string {
+	if len(polStr) == 1 {
+		return polStr
+	} else if val, ok := p.cache[polStr]; ok {
+		return val
+	} else {
+		middleIndex := len(polStr) / 2
+		s1 := polStr[:middleIndex]
+		s2 := polStr[middleIndex-1 : middleIndex+1]
+		s3 := polStr[middleIndex:]
+		p1 := p.expand(s1)
+		p2 := p.expand(s2)
+		p3 := p.expand(s3)
+		if _, ok := p.cache[s1]; !ok {
+			p.cache[s1] = p1
 		}
-		// we skipped the last piece from the polymer, insert it too
-		newPolymer.WriteString(string(p.val[len(p.val)-1]))
-		p.val = newPolymer.String()
+		if _, ok := p.cache[s2]; !ok {
+			p.cache[s2] = p2
+		}
+		if _, ok := p.cache[s3]; !ok {
+			p.cache[s3] = p3
+		}
+		mergedPolymer := p1[:len(p1)-1] + p2[:len(p2)-1] + p3
+		if _, ok := p.cache[mergedPolymer]; !ok {
+			p.cache[polStr] = mergedPolymer
+		}
+		return mergedPolymer
 	}
-
-	// calculate result
-	return p.getTask1Result()
 }
 
-func task2(lines []string) int {
-	return 0
+func expandPolymer(lines []string, noSteps int) int {
+	/*
+		Outline of the algorithm
+		- try to cache results
+		- iterate on a single pair as deep as you can on a tuple
+	*/
+	var p polymer
+	p.loadCache(lines, noSteps)
+	for i := 0; i < noSteps; i++ {
+		p.val = p.expand(p.val)
+		fmt.Println("iteration", i+1)
+	}
+	// calculate result
+	return p.getTaskResult()
 }
 
 func main() {
@@ -100,7 +113,6 @@ func main() {
 
 	// be careful about the linebreak in the last number
 	lines := strings.Split(strings.Trim(string(input), "\n"), "\n")
-	fmt.Println("Task 1:", task1(lines, 10))
-	fmt.Println("Task 2: Code to escape")
-	task2(lines)
+	//fmt.Println("Task 1:", expandPolymer(lines, 10))
+	fmt.Println("Task 2:", expandPolymer(lines, 40))
 }
