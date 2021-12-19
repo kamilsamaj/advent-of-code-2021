@@ -9,30 +9,32 @@ import (
 )
 
 type polymer struct {
-	cache map[string]string
-	val   string
+	rules         map[string]string
+	originalInput string
+	resultCache   map[string]map[string]int // for example: resultCache["NN_2"] = {"N": 2, "B": 4, "C": 1...}
 }
 
 const MaxInt = int((^uint(0)) >> 1)
 
 func (p *polymer) load(lines []string, noSteps int) {
-	p.cache = make(map[string]string)
+	p.rules = make(map[string]string)
 	for i, line := range lines {
 		trimmedLine := strings.Trim(line, "\n")
 		if trimmedLine == "" {
 			continue
 		}
 		if i == 0 {
-			p.val = trimmedLine
+			p.originalInput = trimmedLine
 			continue
 		}
 
 		r := regexp.MustCompile(`^(\w{2}) -> (\w)$`)
 		match := r.FindStringSubmatch(line)
-		p.cache[match[1]] = match[2]
+		p.rules[match[1]] = match[2]
 	}
 }
 
+// getTaskResult finds the most and the least common character and returns their result
 func (p *polymer) getTaskResult(characterCounts map[string]int) int {
 	type res struct {
 		val    int
@@ -54,34 +56,58 @@ func (p *polymer) getTaskResult(characterCounts map[string]int) int {
 	return max.val - min.val
 }
 
-func (p *polymer) expand(tuple string, noSteps int, characterCounts map[string]int) {
+// expand gets a tuple of characters and recursively counts what they add
+func (p *polymer) expand(tuple string, noSteps int, characterCounts map[string]int) map[string]int {
 	if noSteps == 0 {
-		return
+		return nil
 	}
-	insertedChar := p.cache[tuple]
-	characterCounts[insertedChar]++
+	var updated = make(map[string]int) // what characters this tuple adds (doesn't include the tuple itself)
 
-	p.expand(string(tuple[0])+insertedChar, noSteps-1, characterCounts)
-	p.expand(insertedChar+string(tuple[1]), noSteps-1, characterCounts)
+	cacheKeyName := fmt.Sprint(tuple, "_", noSteps) // same results = same tuple with the same number of missing steps
+
+	// if cache already exists, return is right away
+	if counts, ok := p.resultCache[cacheKeyName]; ok {
+		// cache doesn't contain the tuple itself to avoid duplicates when expanding the tree
+		for k, v := range counts {
+			characterCounts[k] += v
+		}
+		return counts
+	}
+
+	insertedChar := p.rules[tuple]
+	characterCounts[insertedChar]++ // global counters
+	updated[insertedChar]++         // cache for the tuple expansion
+
+	// recursively expand the other steps
+	r1 := p.expand(string(tuple[0])+insertedChar, noSteps-1, characterCounts)
+	r2 := p.expand(insertedChar+string(tuple[1]), noSteps-1, characterCounts)
+	for k, v := range r1 {
+		updated[k] += v
+	}
+	for k, v := range r2 {
+		updated[k] += v
+	}
+
+	p.resultCache[cacheKeyName] = updated // save the result to the cache
+	return updated
 }
 
 func expandPolymer(lines []string, noSteps int) int {
 	/*
-		Outline of the algorithm
-		- try to cache results
-		- iterate on a single pair as deep as you can on a tuple
+		The algorithm expands each tuple of character by `noSteps` and only updates the character counters
+		It needs a cache that remembers the expansion (=what a subtree adds)
 	*/
 	var p polymer
+	p.resultCache = make(map[string]map[string]int)
 	p.load(lines, noSteps)
 	var characterCounts = make(map[string]int)
 
 	// recursively expand the tuples but just update the characterCounts - don't expand the string
-	for i := 0; i < len(p.val)-1; i++ {
-		characterCounts[string(p.val[i])]++
-		p.expand(p.val[i:i+2], noSteps, characterCounts)
-		fmt.Println(i)
+	for i := 0; i < len(p.originalInput)-1; i++ {
+		characterCounts[string(p.originalInput[i])]++ // global results
+		p.expand(p.originalInput[i:i+2], noSteps, characterCounts)
 	}
-	characterCounts[string(p.val[len(p.val)-1])]++ // last item is missed
+	characterCounts[string(p.originalInput[len(p.originalInput)-1])]++ // last item is missed
 	// calculate result
 	return p.getTaskResult(characterCounts)
 }
@@ -95,6 +121,6 @@ func main() {
 
 	// be careful about the linebreak in the last number
 	lines := strings.Split(strings.Trim(string(input), "\n"), "\n")
-	//fmt.Println("Task 1:", expandPolymer(lines, 10))
-	fmt.Println("Task 2:", expandPolymer(lines, 30))
+	fmt.Println("Task 1:", expandPolymer(lines, 10))
+	fmt.Println("Task 2:", expandPolymer(lines, 40))
 }
