@@ -15,7 +15,7 @@ type polymer struct {
 
 const MaxInt = int((^uint(0)) >> 1)
 
-func (p *polymer) loadCache(lines []string, noSteps int) {
+func (p *polymer) load(lines []string, noSteps int) {
 	p.cache = make(map[string]string)
 	for i, line := range lines {
 		trimmedLine := strings.Trim(line, "\n")
@@ -29,15 +29,11 @@ func (p *polymer) loadCache(lines []string, noSteps int) {
 
 		r := regexp.MustCompile(`^(\w{2}) -> (\w)$`)
 		match := r.FindStringSubmatch(line)
-		p.cache[match[1]] = string(match[1][0]) + match[2] + string(match[1][1])
+		p.cache[match[1]] = match[2]
 	}
 }
 
-func (p *polymer) getTaskResult() int {
-	var resMap = make(map[string]int)
-	for _, s := range p.val {
-		resMap[string(s)]++
-	}
+func (p *polymer) getTaskResult(characterCounts map[string]int) int {
 	type res struct {
 		val    int
 		letter string
@@ -45,7 +41,7 @@ func (p *polymer) getTaskResult() int {
 	min := res{MaxInt, ""}
 	max := res{0, ""}
 
-	for k, v := range resMap {
+	for k, v := range characterCounts {
 		if v > max.val {
 			max.val = v
 			max.letter = k
@@ -58,34 +54,15 @@ func (p *polymer) getTaskResult() int {
 	return max.val - min.val
 }
 
-func (p *polymer) expand(polStr string) string {
-	if len(polStr) == 1 {
-		return polStr
-	} else if val, ok := p.cache[polStr]; ok {
-		return val
-	} else {
-		middleIndex := len(polStr) / 2
-		s1 := polStr[:middleIndex]
-		s2 := polStr[middleIndex-1 : middleIndex+1]
-		s3 := polStr[middleIndex:]
-		p1 := p.expand(s1)
-		p2 := p.expand(s2)
-		p3 := p.expand(s3)
-		if _, ok := p.cache[s1]; !ok {
-			p.cache[s1] = p1
-		}
-		if _, ok := p.cache[s2]; !ok {
-			p.cache[s2] = p2
-		}
-		if _, ok := p.cache[s3]; !ok {
-			p.cache[s3] = p3
-		}
-		mergedPolymer := p1[:len(p1)-1] + p2[:len(p2)-1] + p3
-		if _, ok := p.cache[mergedPolymer]; !ok {
-			p.cache[polStr] = mergedPolymer
-		}
-		return mergedPolymer
+func (p *polymer) expand(tuple string, noSteps int, characterCounts map[string]int) {
+	if noSteps == 0 {
+		return
 	}
+	insertedChar := p.cache[tuple]
+	characterCounts[insertedChar]++
+
+	p.expand(string(tuple[0])+insertedChar, noSteps-1, characterCounts)
+	p.expand(insertedChar+string(tuple[1]), noSteps-1, characterCounts)
 }
 
 func expandPolymer(lines []string, noSteps int) int {
@@ -95,13 +72,18 @@ func expandPolymer(lines []string, noSteps int) int {
 		- iterate on a single pair as deep as you can on a tuple
 	*/
 	var p polymer
-	p.loadCache(lines, noSteps)
-	for i := 0; i < noSteps; i++ {
-		p.val = p.expand(p.val)
-		fmt.Println("iteration", i+1)
+	p.load(lines, noSteps)
+	var characterCounts = make(map[string]int)
+
+	// recursively expand the tuples but just update the characterCounts - don't expand the string
+	for i := 0; i < len(p.val)-1; i++ {
+		characterCounts[string(p.val[i])]++
+		p.expand(p.val[i:i+2], noSteps, characterCounts)
+		fmt.Println(i)
 	}
+	characterCounts[string(p.val[len(p.val)-1])]++ // last item is missed
 	// calculate result
-	return p.getTaskResult()
+	return p.getTaskResult(characterCounts)
 }
 
 func main() {
@@ -114,5 +96,5 @@ func main() {
 	// be careful about the linebreak in the last number
 	lines := strings.Split(strings.Trim(string(input), "\n"), "\n")
 	//fmt.Println("Task 1:", expandPolymer(lines, 10))
-	fmt.Println("Task 2:", expandPolymer(lines, 40))
+	fmt.Println("Task 2:", expandPolymer(lines, 30))
 }
